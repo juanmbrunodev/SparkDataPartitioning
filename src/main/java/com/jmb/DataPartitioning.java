@@ -1,5 +1,7 @@
 package com.jmb;
 
+import org.apache.spark.api.java.function.ForeachFunction;
+import org.apache.spark.api.java.function.ForeachPartitionFunction;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
@@ -35,11 +37,25 @@ public class DataPartitioning {
                 .option("inferSchema", "true")
                 .load(PATH_RESOURCES);
 
+        //Set 4 partitions as project is demoed in a single node cluster (local/dev env)
+        Dataset<Row> distDf = df.repartition(4);
+
         //Show first 5 records of the Raw ingested DataSet
-        df.show(5);
+        distDf.show(5);
 
         //Show the amount of partitions
-        LOGGER.info("Number of Partitions " + df.javaRDD().getNumPartitions());
+        LOGGER.info("NUMBER OF PARTITIONS " + distDf.javaRDD().getNumPartitions());
+
+        //Define a Spark based Partition function as a lambda
+        ForeachPartitionFunction<Row> fepf = (rowIterator) -> {
+         LOGGER.info("PARTITION CONTENTS: ");
+         while(rowIterator.hasNext()) {
+             LOGGER.info("ROW VALUE " + rowIterator.next().toString());
+         }
+        };
+
+        //Execute the function on the DataFrame
+        distDf.foreachPartition(fepf);
 
     }
 
