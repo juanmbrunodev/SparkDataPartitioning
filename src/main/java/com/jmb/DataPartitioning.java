@@ -1,13 +1,13 @@
 package com.jmb;
 
-import org.apache.spark.api.java.function.ForeachFunction;
 import org.apache.spark.api.java.function.ForeachPartitionFunction;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import static org.apache.spark.sql.functions.*;
+
+import static org.apache.spark.sql.functions.col;
 
 
 public class DataPartitioning {
@@ -57,6 +57,11 @@ public class DataPartitioning {
         //Execute the function on the DataFrame
         distDf.foreachPartition(fepf);
 
+        //Sort the sales per seller ID
+        Dataset<Row> sortedSales = distDf.sort(col("id"));
+
+        //Print the results per partition.
+        sortedSales.foreachPartition(fepf);
     }
 
 }
